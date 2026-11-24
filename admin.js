@@ -4,7 +4,7 @@
 const S = 'SUPER_ADMIN', O = 'ADMIN_OSIS', P = 'PETUGAS_SENSITIF';
 const ROLE_NAME = { [S]: 'Super Admin', [O]: 'Admin OSIS', [P]: 'Petugas Penanganan Laporan Sensitif' };
 const STATUS = ['Diterima', 'Ditelaah', 'Diproses', 'Selesai', 'Ditutup'];
-const st = { user: null, meta: null, notif: 0, q: '' };
+const st = { user: null, meta: { kategori: [], jenis: [], tahunAjaran: [] }, notif: 0, q: '', metaP: null, timer: null };
 const SS = { get() { try { return JSON.parse(sessionStorage.getItem('aluna_adm')); } catch (e) { return null; } }, set(v) { try { sessionStorage.setItem('aluna_adm', JSON.stringify(v)); } catch (e) {} }, del() { try { sessionStorage.removeItem('aluna_adm'); } catch (e) {} } };
 
 function h(tag, a, ...kids) {
@@ -85,7 +85,7 @@ function showLogin(msg) {
   const go = async () => {
     er.textContent = ''; if (!u.value.trim() || !p.value) return er.textContent = 'Isi username dan password.';
     b.disabled = true; b.textContent = 'Memeriksa...';
-    try { const r = await api('login', { username: u.value, password: p.value }); SS.set({ token: r.token }); st.user = r.user; r.wajibGanti ? showForceChange() : start(); }
+    try { const r = await api('login', { username: u.value, password: p.value }); SS.set({ token: r.token }); st.user = r.user; r.wajibGanti ? showForceChange() : start(true); }
     catch (e) { er.textContent = e.message; b.disabled = false; b.textContent = 'Masuk'; }
   };
   const b = h('button', { class: 'btn teal', onclick: go }, 'Masuk');
@@ -95,7 +95,7 @@ function showLogin(msg) {
 }
 function pwForm(forced) {
   return { title: 'Ganti password', fields: [{ k: 'lama', label: 'Password saat ini', type: 'password', req: 1 }, { k: 'baru', label: 'Password baru (min. 8 karakter, huruf dan angka)', type: 'password', req: 1 }, { k: 'ulang', label: 'Ulangi password baru', type: 'password', req: 1 }],
-    submit: async v => { if (v.baru !== v.ulang) throw new Error('Ulangi password tidak sama.'); await api('changePassword', { lama: v.lama, baru: v.baru }); }, okMsg: 'Password berhasil diganti.', after: () => { if (forced) start(); } };
+    submit: async v => { if (v.baru !== v.ulang) throw new Error('Ulangi password tidak sama.'); await api('changePassword', { lama: v.lama, baru: v.baru }); }, okMsg: 'Password berhasil diganti.', after: () => { if (forced) start(true); } };
 }
 function showForceChange() {
   $('#app').replaceChildren(h('div', { class: 'login' }, h('div', { class: 'box card' }, h('h2', {}, 'Ganti password awal'), h('p', { class: 'muted' }, 'Demi keamanan, password sementara wajib diganti sebelum melanjutkan.'),
@@ -142,10 +142,10 @@ function route() {
   const v = $('#view'); (PAGES[id] || pDash)(v, decodeURIComponent(parts[1] || '')); window.scrollTo(0, 0);
 }
 async function pollNotif() { try { const r = await api('notifications'); if (r.belumDibaca !== st.notif) { st.notif = r.belumDibaca; const s = $('#side'); if (s) { const keep = s.classList.contains('open'); drawShell(); if (keep) $('#side').classList.add('open'); } } } catch (e) {} }
-async function start() {
-  try { const me = await api('me'); st.user = me.user; } catch (e) { return showLogin(); }
-  try { st.meta = await api('meta'); } catch (e) { st.meta = { kategori: [], jenis: [], tahunAjaran: [] }; }
-  await pollNotif(); setInterval(pollNotif, 60000);
+async function start(fromLogin) {
+  if (!fromLogin) { try { const me = await api('me'); st.user = me.user; } catch (e) { return showLogin(); } }
+  st.metaP = api('meta').then(m => { st.meta = m; }).catch(() => {});   // berjalan paralel, tidak menahan tampilan
+  pollNotif(); if (!st.timer) st.timer = setInterval(pollNotif, 60000);
   if (!location.hash) location.hash = '#/dashboard'; route();
 }
 window.addEventListener('hashchange', route);
@@ -170,7 +170,12 @@ function ringChart(items, total) {
 function pDash(v) {
   const box = h('div'); v.append(h('div', { class: 'stack' }, head('', printBtn(true)), h('div', { class: 'printonly' }, h('b', {}, 'Laporan ringkasan ALUNA - SMP Negeri 1 Kota Bandar Lampung'), h('div', {}, 'Dicetak ' + dt(new Date().toISOString()))), box));
   const role = st.user.role, adm = role !== P;
-  load(box, async () => { const r = await Promise.all([api('dashboard'), api('stats', { ta: 'all' }).catch(() => null), api('inbox', {}).catch(() => ({ daftar: [] })), adm ? api('analisis').catch(() => null) : null]); return { d: r[0], s: r[1], i: r[2], a: r[3] }; }, x => {
+  load(box, async () => {
+    const d = await api('dashboard');   // satu panggilan: angka, grafik, daftar perhatian, lokasi
+    if (d.perhatian) return { d: d, s: { mingguan: d.mingguan || {}, bulanan: {} }, i: { daftar: d.perhatian }, a: { perLokasi: d.lokasi || {} } };
+    const r = await Promise.all([api('stats', { ta: 'all' }).catch(() => null), api('inbox', {}).catch(() => ({ daftar: [] })), adm ? api('analisis').catch(() => null) : null]);   // cadangan bila backend belum diperbarui
+    return { d: d, s: r[0], i: r[1], a: r[2] };
+  }, x => {
     const d = x.d, FIN = ['Selesai', 'Ditutup'];
     const kpi = (icon, label, val, pill, cls, sub, primary) => h('div', { class: 'kpi' + (primary ? ' primary' : '') }, h('div', { class: 'row between' }, h('span', { class: 'kic' }, ic(icon)), pill ? h('span', { class: 'pill ' + cls }, pill) : null), h('div', { class: 'kl' }, label), h('div', { class: 'kv' }, val), h('div', { class: 'ks' }, sub));
     const wk = x.s ? x.s.mingguan : {}, wks = Object.keys(wk).sort(); let wow = null;
@@ -212,7 +217,8 @@ function pDash(v) {
 }
 
 /* ---------- inbox dan detail ---------- */
-function pInbox(v, sens) {
+async function pInbox(v, sens) {
+  if (st.metaP) await st.metaP;
   const box = h('div'), q0 = st.q || '', f = { status: '', kategoriId: '', jenis: '', q: q0, terlambat: false };
   const sel = (k, ph, opts) => h('select', { class: 'in', 'aria-label': ph, onchange: e => { f[k] = e.target.value; go(); } }, h('option', { value: '' }, ph), opts.map(o => h('option', { value: o.v !== undefined ? o.v : o }, o.t !== undefined ? o.t : o)));
   const q = h('input', { class: 'in', placeholder: 'Cari judul / nomor referensi', value: q0, 'aria-label': 'Cari', oninput: e => { f.q = e.target.value; clearTimeout(q._t); q._t = setTimeout(go, 350); } });
