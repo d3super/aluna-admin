@@ -21,7 +21,7 @@ const IC = {
   list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>', bell: '<path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8zM10 20a2 2 0 0 0 4 0"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2z"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/>', menu: '<path d="M4 6h16M4 12h16M4 18h16"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>', sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-  moon: '<path d="M21 13a9 9 0 1 1-10-10 7 7 0 0 0 10 10z"/>', out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>', print: '<path d="M6 9V3h12v6M6 18H4v-7h16v7h-2"/><rect x="6" y="14" width="12" height="7"/>', back: '<path d="M15 5l-7 7 7 7"/>', search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'
+  moon: '<path d="M21 13a9 9 0 1 1-10-10 7 7 0 0 0 10 10z"/>', out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>', print: '<path d="M6 9V3h12v6M6 18H4v-7h16v7h-2"/><rect x="6" y="14" width="12" height="7"/>', back: '<path d="M15 5l-7 7 7 7"/>', clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', check: '<path d="M5 13l4 4L19 7"/>', search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>'
 };
 function ic(n) { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('class', 'ic'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = IC[n] || ''; return s; }
 const dt = i => i ? new Date(i).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '';
@@ -76,7 +76,7 @@ function tbl(cols, rows, onRow) {
     h('tbody', {}, rows.map(r => h('tr', onRow ? { class: 'click', tabindex: 0, onclick: () => onRow(r), onkeydown: e => { if (e.key === 'Enter') onRow(r); } } : {}, cols.map(c => h('td', {}, c.f(r))))))));
 }
 const bars = (t, o) => { const ks = Object.keys(o).sort((a, b) => o[b] - o[a]), mx = o[ks[0]] || 1; return h('div', { class: 'card stack' }, h('h3', {}, t), ks.length ? ks.map(k => { const i = h('i'); i.style.width = Math.max(4, o[k] * 100 / mx) + '%'; return h('div', { class: 'bar' }, h('div', { class: 'lab' }, h('span', {}, k), h('b', {}, o[k])), h('div', { class: 'tr' }, i)); }) : h('p', { class: 'muted' }, 'Belum ada data.')); };
-const head = (t, ...r) => h('div', { class: 'row between wrap pagehead' }, h('h1', {}, t), h('div', { class: 'row wrap' }, r));
+const head = (t, ...r) => r.filter(Boolean).length ? h('div', { class: 'actions' }, r) : null;
 const printBtn = big => h('button', { class: 'btn teal noprint' + (big ? '' : ' sm'), onclick: () => window.print() }, ic('print'), big ? 'Cetak laporan' : 'Cetak / simpan PDF');
 
 /* ---------- login ---------- */
@@ -113,22 +113,25 @@ const MENU = [
 const PAGES = { dashboard: pDash, inbox: v => pInbox(v, false), sensitif: v => pInbox(v, true), respons: pRespons, analisis: pAnalisis, kegiatan: pKegiatan, ta: pTa, kategori: pKategori, pengguna: pPengguna, audit: pAudit, notif: pNotif, pengaturan: pPengaturan, akun: pAkun, detail: pDetail };
 function theme() { const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); try { localStorage.setItem('aluna_theme', t); } catch (e) {} drawShell(); route(); }
 const GRP1 = ['dashboard', 'inbox', 'sensitif', 'respons', 'analisis', 'kegiatan'], GRP2 = ['ta', 'kategori', 'pengguna', 'audit', 'pengaturan'];
+const TITLES = { inbox: 'Kelola saran, kritik, dan pengaduan reguler', sensitif: 'Akses terbatas, setiap pembukaan dicatat', respons: 'Setujui dan pantau respons sekolah', analisis: 'Dasar pengambilan keputusan sekolah', kegiatan: 'Tampil di aplikasi siswa', ta: 'Atur tahun ajaran aktif', kategori: 'Atur kategori dan target penanganan', pengguna: 'Kelola akun petugas dan admin', audit: 'Jejak aktivitas aplikasi', notif: 'Pemberitahuan untukmu', pengaturan: 'Pengaturan, cadangan, dan ekspor', akun: 'Profil dan keamanan akun' };
 function drawShell() {
-  const cur = (location.hash.replace('#/', '') || 'dashboard').split('/')[0], dark = document.documentElement.getAttribute('data-theme') === 'dark', role = st.user.role;
+  const parts = (location.hash.replace('#/', '') || 'dashboard').split('/'), cur = parts[0], dark = document.documentElement.getAttribute('data-theme') === 'dark', role = st.user.role;
   const ok = MENU.filter(m => m.r.indexOf(role) >= 0), home = role === P ? 'sensitif' : 'inbox';
   const link = m => h('a', { href: '#/' + m.id, 'aria-current': cur === m.id || (cur === 'detail' && m.id === home) ? 'page' : null, onclick: () => side.classList.remove('open') }, ic(m.i), m.t);
-  const g2 = ok.filter(m => GRP2.indexOf(m.id) >= 0);
-  const side = h('aside', { class: 'side', id: 'side' }, h('div', { class: 'brand' }, h('img', { src: LOGO, alt: '' }), h('div', {}, h('b', {}, 'ALUNA'), h('small', {}, 'Monitoring dan tindak lanjut'))),
-    ok.filter(m => GRP1.indexOf(m.id) >= 0).map(link), g2.length ? h('div', { class: 'sec' }, 'Pengelolaan') : null, g2.map(link),
-    h('div', { class: 'sep' }), link(MENU.filter(m => m.id === 'akun')[0]), h('a', { href: '#', onclick: e => { e.preventDefault(); logout(); } }, ic('out'), 'Keluar'),
-    h('div', { class: 'tip' }, h('img', { src: LOGO, alt: '' }), h('b', {}, 'Ruang Aman Untuk Setiap Suara'), 'Tangani setiap laporan tepat waktu.'));
+  const g2 = ok.filter(m => GRP2.indexOf(m.id) >= 0), m0 = MENU.filter(m => m.id === cur)[0];
+  const title = cur === 'dashboard' ? 'Dashboard' : cur === 'detail' ? 'Detail Laporan' : (m0 ? m0.t : 'ALUNA');
+  const sub = cur === 'dashboard' ? new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : cur === 'detail' ? decodeURIComponent(parts[1] || '') : (TITLES[cur] || '');
+  const side = h('aside', { class: 'side', id: 'side' }, h('div', { class: 'brand' }, h('img', { src: LOGO, alt: '' }), h('b', {}, 'ALUNA')),
+    h('div', { class: 'sec' }, 'Menu'), ok.filter(m => GRP1.indexOf(m.id) >= 0).map(link), g2.length ? [h('div', { class: 'sec' }, 'Pengelolaan'), g2.map(link)] : null,
+    h('div', { class: 'sec' }, 'Akun'), link(MENU.filter(m => m.id === 'akun')[0]), h('a', { href: '#', onclick: e => { e.preventDefault(); logout(); } }, ic('out'), 'Keluar'),
+    h('div', { class: 'darkcard' }, h('img', { src: LOGO, alt: '' }), h('b', {}, 'Ruang Aman Untuk Setiap Suara'), h('p', {}, 'Tangani setiap laporan tepat waktu dan jaga kerahasiaannya.'), h('a', { class: 'btn teal sm', href: '#/' + home }, role === P ? 'Buka laporan saya' : 'Buka inbox')));
   const search = h('input', { placeholder: 'Cari laporan...', 'aria-label': 'Cari laporan', onkeydown: e => { if (e.key === 'Enter' && e.target.value.trim()) { st.q = e.target.value.trim(); location.hash = '#/' + home; if (cur === home) route(); } } });
-  const top = h('div', { class: 'topbar noprint' }, h('button', { class: 'icon-btn menu-btn', 'aria-label': 'Buka menu', onclick: () => side.classList.toggle('open') }, ic('menu')),
-    h('label', { class: 'search' }, ic('search'), search), h('span', { class: 'grow' }),
-    h('button', { class: 'icon-btn', 'aria-label': dark ? 'Mode terang' : 'Mode gelap', onclick: theme }, ic(dark ? 'sun' : 'moon')),
-    h('a', { class: 'icon-btn', href: '#/notif', 'aria-label': 'Notifikasi' + (st.notif ? ', ' + st.notif + ' baru' : '') }, ic('bell'), st.notif ? h('i', { class: 'dot-n' }) : null),
-    h('div', { class: 'user' }, h('span', {}, st.user.nama), h('div', { class: 'avatar', 'aria-hidden': 'true' }, st.user.nama.split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase())));
-  $('#app').replaceChildren(h('div', { class: 'shell' }, side, h('div', { class: 'main' }, top, h('main', { class: 'content', id: 'view', tabindex: -1 }))));
+  const hdr = h('header', { class: 'hdr noprint' }, h('button', { class: 'cbtn menu-btn', 'aria-label': 'Buka menu', onclick: () => side.classList.toggle('open') }, ic('menu')),
+    h('div', { class: 'grow' }, h('h1', {}, title), h('p', { class: 'muted' }, sub)), h('label', { class: 'search' }, ic('search'), search),
+    h('button', { class: 'cbtn', 'aria-label': dark ? 'Mode terang' : 'Mode gelap', onclick: theme }, ic(dark ? 'sun' : 'moon')),
+    h('a', { class: 'cbtn', href: '#/notif', 'aria-label': 'Notifikasi' + (st.notif ? ', ' + st.notif + ' baru' : '') }, ic('bell'), st.notif ? h('i', { class: 'dot-n' }) : null),
+    h('div', { class: 'user' }, h('div', { class: 'avatar', 'aria-hidden': 'true' }, st.user.nama.split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase()), h('div', {}, h('b', {}, st.user.nama), h('small', {}, ROLE_NAME[role].split(' ').slice(0, 2).join(' ')))));
+  $('#app').replaceChildren(h('div', { class: 'shell' }, side, h('div', { class: 'main' }, hdr, h('main', { class: 'content', id: 'view', tabindex: -1 }))));
 }
 function route() {
   if (!st.user) return;
@@ -148,32 +151,63 @@ async function start() {
 window.addEventListener('hashchange', route);
 
 /* ---------- dashboard ---------- */
-function chartCard(title, obj, lf, sub) {
-  const ks = Object.keys(obj).sort(), mx = Math.max(1, ...ks.map(k => obj[k]));
-  return h('div', { class: 'card' }, h('div', { class: 'row between wrap' }, h('div', { class: 'row' }, ic('cal'), h('span', { class: 'muted' }, 'Periode:'), h('b', {}, sub)),
-    h('div', { class: 'legend' }, h('span', {}, h('i', { class: 'dot gold' }), 'Terbaru'), h('span', {}, h('i', { class: 'dot light' }), 'Sebelumnya'))),
-    h('div', { class: 'plot', role: 'img', 'aria-label': title }, h('div', { class: 'yax' }, [mx, Math.ceil(mx / 2), 0].map(n => h('span', {}, n))),
-      h('div', { class: 'cols2' }, ks.map((k, i) => { const b = h('i'); b.style.height = (obj[k] * 100 / mx) + '%'; return h('div', { class: 'colw' + (i === ks.length - 1 ? ' last' : ''), 'data-v': obj[k] + ' laporan' }, b, h('span', {}, lf(k))); }))));
+const NS = 'http://www.w3.org/2000/svg';
+function groupChart(months, series) {
+  const mx = Math.max(1, ...months.flatMap(m => series.map(s => s.vals[m] || 0))), top = Math.ceil(mx / 4) * 4;
+  const lbl = m => { const p = m.split('-'); return new Date(p[0], p[1] - 1, 1).toLocaleDateString('id-ID', { month: 'short' }); };
+  return h('div', { class: 'plot', role: 'img', 'aria-label': 'Grafik laporan per bulan' }, h('div', { class: 'yax' }, [4, 3, 2, 1, 0].map(i => h('span', {}, top / 4 * i))),
+    h('div', { class: 'cols2' }, months.map(m => h('div', { class: 'grp', tabindex: 0 }, h('div', { class: 'bars2' }, series.map((s, i) => { const b = h('i', { class: i ? 'b' : (series.length === 1 ? 'b' : '') }); b.style.height = ((s.vals[m] || 0) * 100 / top) + '%'; return b; })),
+      h('span', { class: 'gl' }, lbl(m)), h('div', { class: 'tt' }, series.map((s, i) => h('div', {}, h('i', { class: 'sw ' + (i || series.length === 1 ? 'b' : 'a') }), h('b', {}, s.vals[m] || 0), ' ' + s.name)))))));
+}
+function ringChart(items, total) {
+  const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', '0 0 200 200'); svg.setAttribute('class', 'ringsvg'); svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', 'Sebaran status laporan');
+  items.forEach((it, i) => {
+    const r = 90 - i * 19, C = 2 * Math.PI * r, mk = (cls, frac) => { const c = document.createElementNS(NS, 'circle'); c.setAttribute('cx', 100); c.setAttribute('cy', 100); c.setAttribute('r', r); c.setAttribute('class', cls); c.setAttribute('stroke-dasharray', (C * 0.75 * frac) + ' ' + C); c.setAttribute('transform', 'rotate(135 100 100)'); return c; };
+    svg.append(mk('rt', 1)); if (total && it.n) svg.append(mk('ra' + i, Math.max(.03, it.n / total)));
+  });
+  return svg;
 }
 function pDash(v) {
-  const box = h('div'); v.append(h('div', { class: 'stack' }, head('Dashboard', printBtn(true)), h('div', { class: 'printonly' }, h('b', {}, 'Laporan ringkasan ALUNA - SMP Negeri 1 Kota Bandar Lampung'), h('div', {}, 'Dicetak ' + dt(new Date().toISOString()))), box));
-  load(box, async () => { const r = await Promise.all([api('dashboard'), api('stats', { ta: 'all' }).catch(() => null), api('inbox', {}).catch(() => ({ daftar: [] }))]); return { d: r[0], s: r[1], i: r[2] }; }, x => {
-    const d = x.d, role = st.user.role, c = (n, l, bad) => h('div', { class: 'card stat' + (bad ? ' bad' : '') }, h('b', {}, n), h('span', {}, l));
-    const FIN = ['Selesai', 'Ditutup'];
+  const box = h('div'); v.append(h('div', { class: 'stack' }, head('', printBtn(true)), h('div', { class: 'printonly' }, h('b', {}, 'Laporan ringkasan ALUNA - SMP Negeri 1 Kota Bandar Lampung'), h('div', {}, 'Dicetak ' + dt(new Date().toISOString()))), box));
+  const role = st.user.role, adm = role !== P;
+  load(box, async () => { const r = await Promise.all([api('dashboard'), api('stats', { ta: 'all' }).catch(() => null), api('inbox', {}).catch(() => ({ daftar: [] })), adm ? api('analisis').catch(() => null) : null]); return { d: r[0], s: r[1], i: r[2], a: r[3] }; }, x => {
+    const d = x.d, FIN = ['Selesai', 'Ditutup'];
+    const kpi = (icon, label, val, pill, cls, sub, primary) => h('div', { class: 'kpi' + (primary ? ' primary' : '') }, h('div', { class: 'row between' }, h('span', { class: 'kic' }, ic(icon)), pill ? h('span', { class: 'pill ' + cls }, pill) : null), h('div', { class: 'kl' }, label), h('div', { class: 'kv' }, val), h('div', { class: 'ks' }, sub));
+    const wk = x.s ? x.s.mingguan : {}, wks = Object.keys(wk).sort(); let wow = null;
+    if (adm && wks.length >= 2 && wk[wks[wks.length - 2]]) wow = Math.round((wk[wks[wks.length - 1]] - wk[wks[wks.length - 2]]) * 100 / wk[wks[wks.length - 2]]);
+    const kpis = h('div', { class: 'kgrid' },
+      kpi('inbox', 'Total laporan', d.total, wow === null ? null : (wow > 0 ? '+' : '') + wow + '%', wow !== null && wow > 0 ? 'warn' : 'good', wow === null ? 'Seluruh laporan dalam kewenanganmu' : 'dibanding minggu lalu', true),
+      kpi('bell', 'Belum ditangani', d.belumDitangani, d.belumDitangani ? 'Perlu aksi' : 'Aman', d.belumDitangani ? 'warn' : 'good', 'berstatus Diterima'),
+      kpi('clock', 'Melewati SLA', d.terlambat, d.terlambat ? 'Terlambat' : 'Tepat waktu', d.terlambat ? 'bad' : 'good', 'target penanganan terlampaui'),
+      kpi('chat', 'Sudah direspon', d.persenRespons + '%', d.ratingRata2 !== null ? d.ratingRata2 + '/5 puas' : null, 'good', 'laporan dengan respons publik'));
+    // grafik batang
+    const bl = d.bulanan || {}, ms = Object.keys(bl).sort().slice(-7); let months, series;
+    if (ms.length) { months = ms; series = [{ name: 'Masuk', vals: Object.fromEntries(ms.map(m => [m, bl[m].masuk])) }, { name: 'Selesai', vals: Object.fromEntries(ms.map(m => [m, bl[m].selesai])) }]; }
+    else if (x.s && Object.keys(x.s.bulanan).length) { months = Object.keys(x.s.bulanan).sort().slice(-7); series = [{ name: 'Masuk', vals: x.s.bulanan }]; }
+    const chart = months ? h('div', { class: 'card' }, h('div', { class: 'row between wrap' }, h('div', {}, h('h3', {}, 'Tren Aspirasi'), h('small', { class: 'muted' }, 'Laporan masuk dan selesai per bulan')),
+      h('div', { class: 'legend' }, series.length > 1 ? [h('span', {}, h('i', { class: 'sw a' }), 'Masuk'), h('span', {}, h('i', { class: 'sw b' }), 'Selesai')] : h('span', {}, h('i', { class: 'sw b' }), 'Masuk'))), groupChart(months, series)) : null;
+    // perlu perhatian + peringatan
     const rows = x.i.daftar.filter(r => FIN.indexOf(r.status) < 0).sort((a, b) => (b.terlambat - a.terlambat) || ((b.urgensi === 'Mendesak') - (a.urgensi === 'Mendesak')) || b.waktu.localeCompare(a.waktu)).slice(0, 5);
-    const wk = x.s ? x.s.mingguan : {};
-    return h('div', { class: 'stack' },
-      h('div', { class: 'grid' }, c(d.total, 'Total laporan'), c(d.belumDitangani, 'Belum ditangani'), c(d.terlambat, 'Melewati SLA', d.terlambat > 0), c(d.persenRespons + '%', 'Sudah direspon'), d.ratingRata2 !== null ? c(d.ratingRata2 + '/5', 'Kepuasan rata-rata') : null),
-      Object.keys(wk).length ? chartCard('Tren laporan mingguan', wk, k => k.slice(8) + '/' + k.slice(5, 7), '8 minggu terakhir') : null,
-      h('div', { class: 'duo' },
-        h('div', { class: 'card' }, h('div', { class: 'row between' }, h('h3', {}, 'Perlu perhatian'), h('a', { href: '#/' + (role === P ? 'sensitif' : 'inbox'), class: 'muted' }, 'Lihat semua')),
-          rows.length ? rows.map(r => h('a', { class: 'li', href: '#/detail/' + encodeURIComponent(r.ref) }, h('span', { class: 'av' + (r.sensitif ? ' s' : '') }, r.jenis[0]),
-            h('div', { class: 'grow' }, h('b', {}, r.judul), h('small', { class: 'muted' }, r.kategori + ' - ' + dd(r.waktu))),
-            h('span', { class: 'badge ' + r.status }, r.status), r.terlambat ? h('span', { class: 'tag late' }, 'Terlambat') : h('span', { class: 'muted sla' }, 'SLA ' + dd(r.slaDue)))) : h('div', { class: 'empty' }, 'Tidak ada laporan yang menunggu. Kerja bagus!')),
-        h('div', { class: 'promo' }, h('h3', {}, d.peringatan.length ? 'Ada ' + d.peringatan.length + ' peringatan dini' : 'Semua terkendali'), h('p', {}, d.peringatan.length ? d.peringatan[0].pesan : 'Belum ada tren yang perlu diwaspadai saat ini.'),
-          h('a', { class: 'btn gold sm', href: role === P ? '#/sensitif' : '#/analisis' }, role === P ? 'Buka laporan' : 'Lihat analisis'), h('i', { class: 's1' }), h('i', { class: 's2' }))),
-      d.peringatan.length > 1 ? h('div', { class: 'card stack' }, h('h3', {}, 'Semua peringatan dini'), d.peringatan.map(w => h('div', { class: 'warn ' + w.tingkat }, w.pesan))) : null,
-      bars('Laporan per status', d.status));
+    const warn = d.peringatan.length ? h('div', { class: 'card stack' }, h('h3', {}, 'Peringatan dini'), d.peringatan.map(w => h('div', { class: 'warn ' + w.tingkat }, w.pesan))) : null;
+    const att = h('div', { class: 'card' }, h('div', { class: 'row between' }, h('div', {}, h('h3', {}, 'Perlu perhatian'), h('small', { class: 'muted' }, 'Terlambat dan mendesak lebih dulu')), h('a', { href: '#/' + (role === P ? 'sensitif' : 'inbox'), class: 'btn ghost sm' }, 'Lihat semua')),
+      rows.length ? rows.map(r => h('a', { class: 'li', href: '#/detail/' + encodeURIComponent(r.ref) }, h('span', { class: 'av' + (r.sensitif ? ' s' : '') }, r.jenis[0]), h('div', { class: 'grow' }, h('b', {}, r.judul), h('small', { class: 'muted' }, r.kategori + ' - ' + dd(r.waktu))),
+        h('span', { class: 'badge ' + r.status }, r.status), r.terlambat ? h('span', { class: 'pill bad' }, 'Terlambat') : h('span', { class: 'muted sla' }, 'SLA ' + dd(r.slaDue)))) : h('div', { class: 'empty' }, 'Tidak ada laporan yang menunggu. Kerja bagus!'));
+    // cincin status
+    const s = d.status, fin = (s.Selesai || 0) + (s.Ditutup || 0), items = [{ l: 'Diterima', n: s.Diterima || 0 }, { l: 'Ditelaah', n: s.Ditelaah || 0 }, { l: 'Diproses', n: s.Diproses || 0 }, { l: 'Selesai', n: fin }];
+    const pc = n => d.total ? Math.round(n * 100 / d.total) + '%' : '0%';
+    const ring = h('div', { class: 'card' }, h('div', { class: 'row between' }, h('div', {}, h('h3', {}, 'Statistik Status'), h('small', { class: 'muted' }, 'Sebaran tindak lanjut laporan')), h('span', { class: 'pill soft' }, 'Semua')),
+      h('div', { class: 'ringw' }, ringChart(items, d.total), h('div', { class: 'ringc' }, h('b', {}, d.total), h('small', {}, 'Total laporan'), h('span', { class: 'pill good' }, d.persenRespons + '% direspon'))),
+      items.map((it, i) => h('div', { class: 'lrow' }, h('i', { class: 'dotc d' + i }), it.l, h('span', { class: 'n' }, it.n), h('span', { class: 'pill ' + (i === 3 ? 'good' : i === 0 && it.n ? 'warn' : 'soft') }, pc(it.n)))));
+    // gelembung lokasi
+    let loc = null;
+    if (adm) {
+      const lk = x.a ? x.a.perLokasi : {}, ks = Object.keys(lk).sort((a, b) => lk[b] - lk[a]).slice(0, 4), mx = lk[ks[0]] || 1;
+      const sizes = [[0, 0, 108], [78, 30, 76], [30, 88, 58]];
+      loc = h('div', { class: 'card' }, h('div', {}, h('h3', {}, 'Sebaran Lokasi'), h('small', { class: 'muted' }, 'Area sekolah yang paling sering dilaporkan')),
+        ks.length ? h('div', { class: 'bubw' }, h('div', { class: 'bub' }, ks.slice(0, 3).map((k, i) => { const e = h('div', { class: 'b' + i }, lk[k]), z = Math.max(52, sizes[i][2] * (lk[k] / mx * .5 + .5)); e.style.left = sizes[i][0] + 'px'; e.style.top = sizes[i][1] + 'px'; e.style.width = z + 'px'; e.style.height = z + 'px'; return e; })),
+          h('div', { class: 'lst' }, ks.map(k => { const b = h('i'); b.style.width = (lk[k] * 100 / mx) + '%'; return h('div', {}, h('div', { class: 'nm' }, h('span', {}, k), h('b', {}, lk[k])), h('div', { class: 'tr' }, b)); }))) : h('div', { class: 'empty' }, 'Belum ada data lokasi.'));
+    }
+    return h('div', { class: 'dash' }, h('div', { class: 'stack' }, kpis, chart, warn, att), h('div', { class: 'stack' }, ring, loc));
   });
 }
 
