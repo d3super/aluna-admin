@@ -122,8 +122,8 @@ function drawShell() {
   const title = cur === 'dashboard' ? 'Dashboard' : cur === 'detail' ? 'Detail Laporan' : (m0 ? m0.t : 'ALUNA');
   const sub = cur === 'dashboard' ? new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : cur === 'detail' ? decodeURIComponent(parts[1] || '') : (TITLES[cur] || '');
   const side = h('aside', { class: 'side', id: 'side' }, h('div', { class: 'brand' }, h('img', { src: LOGO, alt: '' }), h('b', {}, 'ALUNA')),
-    h('div', { class: 'sec' }, 'Menu'), ok.filter(m => GRP1.indexOf(m.id) >= 0).map(link), g2.length ? [h('div', { class: 'sec' }, 'Pengelolaan'), g2.map(link)] : null,
-    h('div', { class: 'sec' }, 'Akun'), link(MENU.filter(m => m.id === 'akun')[0]), h('a', { href: '#', onclick: e => { e.preventDefault(); logout(); } }, ic('out'), 'Keluar'),
+    h('div', { class: 'navs' }, h('div', { class: 'sec' }, 'Menu'), ok.filter(m => GRP1.indexOf(m.id) >= 0).map(link), g2.length ? [h('div', { class: 'sec' }, 'Pengelolaan'), g2.map(link)] : null,
+    h('div', { class: 'sec' }, 'Akun'), link(MENU.filter(m => m.id === 'akun')[0]), h('a', { href: '#', onclick: e => { e.preventDefault(); logout(); } }, ic('out'), 'Keluar')),
     h('div', { class: 'darkcard' }, h('img', { src: LOGO, alt: '' }), h('b', {}, 'Ruang Aman Untuk Setiap Suara'), h('p', {}, 'Tangani setiap laporan tepat waktu dan jaga kerahasiaannya.'), h('a', { class: 'btn teal sm', href: '#/' + home }, role === P ? 'Buka laporan saya' : 'Buka inbox')));
   const search = h('input', { placeholder: 'Cari laporan...', 'aria-label': 'Cari laporan', onkeydown: e => { if (e.key === 'Enter' && e.target.value.trim()) { st.q = e.target.value.trim(); location.hash = '#/' + home; if (cur === home) route(); } } });
   const hdr = h('header', { class: 'hdr noprint' }, h('button', { class: 'cbtn menu-btn', 'aria-label': 'Buka menu', onclick: () => side.classList.toggle('open') }, ic('menu')),
