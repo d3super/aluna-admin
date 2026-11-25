@@ -288,10 +288,10 @@ function pAnalisis(v) {
 
 /* ---------- kegiatan, tahun ajaran, kategori ---------- */
 function pKegiatan(v) {
-  const box = h('div'), edit = g => formModal({ title: g ? 'Ubah kegiatan' : 'Tambah kegiatan', fields: [{ k: 'judul', label: 'Judul', req: 1, v: g && g.judul }, { k: 'ringkasan', label: 'Ringkasan', type: 'textarea', v: g && g.ringkasan }, { k: 'tanggal', label: 'Tanggal', type: 'date', v: g && g.tanggal }, { k: 'tautan', label: 'Tautan (opsional, diawali https://)', v: g && g.tautan }, { k: 'aktif', label: 'Tampilkan di aplikasi siswa', type: 'check', v: g ? g.aktif === 'TRUE' : true }],
+  const box = h('div'), edit = g => formModal({ title: g ? 'Ubah kegiatan' : 'Tambah kegiatan', fields: [{ k: 'judul', label: 'Judul', req: 1, v: g && g.judul }, { k: 'ringkasan', label: 'Ringkasan', type: 'textarea', v: g && g.ringkasan }, { k: 'tanggal', label: 'Tanggal kegiatan (tampil di aplikasi siswa mulai 3 hari sebelumnya, hilang setelah tanggalnya lewat)', type: 'date', req: 1, v: g && g.tanggal }, { k: 'tautan', label: 'Tautan (opsional, diawali https://)', v: g && g.tautan }, { k: 'aktif', label: 'Tampilkan di aplikasi siswa', type: 'check', v: g ? g.aktif === 'TRUE' : true }],
     submit: x => api('kegiatanSave', Object.assign({ id: g && g.id }, x)), after: go });
   v.append(h('div', { class: 'stack' }, head('Informasi Kegiatan OSIS/Sekolah', h('button', { class: 'btn teal', onclick: () => edit() }, 'Tambah kegiatan')), box));
-  function go() { load(box, () => api('kegiatanList'), r => tbl([{ t: 'Tanggal', f: x => dd(x.tanggal) }, { t: 'Judul', f: x => x.judul }, { t: 'Ringkasan', f: x => x.ringkasan }, { t: 'Status', f: x => h('span', { class: 'tag' }, x.aktif === 'TRUE' ? 'Tampil' : 'Disembunyikan') }], r.daftar, edit)); }
+  function go() { load(box, () => api('kegiatanList'), r => tbl([{ t: 'Tanggal', f: x => dd(x.tanggal) }, { t: 'Judul', f: x => x.judul }, { t: 'Ringkasan', f: x => x.ringkasan }, { t: 'Status', f: x => { const n = new Date(), p2 = v => String(v).padStart(2, '0'), td = n.getFullYear() + '-' + p2(n.getMonth() + 1) + '-' + p2(n.getDate()), e = new Date(n.getFullYear(), n.getMonth(), n.getDate() + 3), en = e.getFullYear() + '-' + p2(e.getMonth() + 1) + '-' + p2(e.getDate()); const t = x.aktif !== 'TRUE' ? 'Disembunyikan' : !x.tanggal ? 'Tanpa tanggal (tidak tampil)' : x.tanggal < td ? 'Sudah lewat' : x.tanggal <= en ? 'Tampil di siswa' : 'Terjadwal (tampil H-3)'; return h('span', { class: 'tag' }, t); } }], r.daftar, edit)); }
   go();
 }
 function pTa(v) {
