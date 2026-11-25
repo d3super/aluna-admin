@@ -1,5 +1,5 @@
 'use strict';
-/* ALUNA Admin: website monitoring dan tindak lanjut. Semua teks dirender lewat textContent (anti-XSS).
+/* VoiceUp Admin: website monitoring dan tindak lanjut. Semua teks dirender lewat textContent (anti-XSS).
    Hak akses SESUNGGUHNYA dijaga server (Apps Script); menu di sini hanya penyesuaian tampilan. */
 const S = 'SUPER_ADMIN', O = 'ADMIN_OSIS', P = 'PETUGAS_SENSITIF';
 const ROLE_NAME = { [S]: 'Super Admin', [O]: 'Admin OSIS', [P]: 'Petugas Penanganan Laporan Sensitif' };
@@ -90,8 +90,8 @@ function showLogin(msg) {
   };
   const b = h('button', { class: 'btn teal', onclick: go }, 'Masuk');
   [u, p].forEach(x => x.addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
-  $('#app').replaceChildren(h('div', { class: 'login' }, h('div', { class: 'box card' }, h('img', { src: LOGO, alt: 'Logo ALUNA' }), h('h1', {}, 'ALUNA'), h('p', { class: 'muted', style: null }, 'Masuk untuk monitoring dan tindak lanjut aspirasi.'),
-    h('label', { class: 'f' }, 'Username', u), h('label', { class: 'f' }, 'Password', p), er, b, h('p', { class: 'muted' }, 'Lupa password? Hubungi Super Admin sekolah.'), h('small', { class: 'muted' }, 'SMP Negeri 1 Kota Bandar Lampung - Copyright@2026 ALUNA'))));
+  $('#app').replaceChildren(h('div', { class: 'login' }, h('div', { class: 'box card' }, h('div', { class: 'plate' }, h('img', { src: LOGO_WIDE, alt: 'VoiceUp' })), h('h1', { class: 'sr' }, 'VoiceUp'), h('p', { class: 'muted', style: null }, 'Masuk untuk monitoring dan tindak lanjut aspirasi.'),
+    h('label', { class: 'f' }, 'Username', u), h('label', { class: 'f' }, 'Password', p), er, b, h('p', { class: 'muted' }, 'Lupa password? Hubungi Super Admin sekolah.'), h('small', { class: 'muted' }, 'SMP Negeri 1 Kota Bandar Lampung - Copyright@2026 VoiceUp'))));
 }
 function pwForm(forced) {
   return { title: 'Ganti password', fields: [{ k: 'lama', label: 'Password saat ini', type: 'password', req: 1 }, { k: 'baru', label: 'Password baru (min. 8 karakter, huruf dan angka)', type: 'password', req: 1 }, { k: 'ulang', label: 'Ulangi password baru', type: 'password', req: 1 }],
@@ -121,7 +121,7 @@ function drawShell() {
   const g2 = ok.filter(m => GRP2.indexOf(m.id) >= 0), m0 = MENU.filter(m => m.id === cur)[0];
   const title = cur === 'dashboard' ? 'Dashboard' : cur === 'detail' ? 'Detail Laporan' : (m0 ? m0.t : 'ALUNA');
   const sub = cur === 'dashboard' ? new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : cur === 'detail' ? decodeURIComponent(parts[1] || '') : (TITLES[cur] || '');
-  const side = h('aside', { class: 'side', id: 'side' }, h('div', { class: 'brand' }, h('img', { src: LOGO, alt: '' }), h('b', {}, 'ALUNA')),
+  const side = h('aside', { class: 'side', id: 'side' }, h('div', { class: 'brand' }, h('img', { src: LOGO, alt: '' }), h('b', {}, 'VoiceUp')),
     h('div', { class: 'navs' }, h('div', { class: 'sec' }, 'Menu'), ok.filter(m => GRP1.indexOf(m.id) >= 0).map(link), g2.length ? [h('div', { class: 'sec' }, 'Pengelolaan'), g2.map(link)] : null,
     h('div', { class: 'sec' }, 'Akun'), link(MENU.filter(m => m.id === 'akun')[0]), h('a', { href: '#', onclick: e => { e.preventDefault(); logout(); } }, ic('out'), 'Keluar')),
     h('div', { class: 'darkcard' }, h('img', { src: LOGO, alt: '' }), h('b', {}, 'Ruang Aman Untuk Setiap Suara'), h('p', {}, 'Tangani setiap laporan tepat waktu dan jaga kerahasiaannya.'), h('a', { class: 'btn teal sm', href: '#/' + home }, role === P ? 'Buka laporan saya' : 'Buka inbox')));
@@ -168,7 +168,7 @@ function ringChart(items, total) {
   return svg;
 }
 function pDash(v) {
-  const box = h('div'); v.append(h('div', { class: 'stack' }, head('', printBtn(true)), h('div', { class: 'printonly' }, h('b', {}, 'Laporan ringkasan ALUNA - SMP Negeri 1 Kota Bandar Lampung'), h('div', {}, 'Dicetak ' + dt(new Date().toISOString()))), box));
+  const box = h('div'); v.append(h('div', { class: 'stack' }, head('', printBtn(true)), h('div', { class: 'printonly' }, h('b', {}, 'Laporan ringkasan VoiceUp - SMP Negeri 1 Kota Bandar Lampung'), h('div', {}, 'Dicetak ' + dt(new Date().toISOString()))), box));
   const role = st.user.role, adm = role !== P;
   load(box, async () => {
     const d = await api('dashboard');   // satu panggilan: angka, grafik, daftar perhatian, lokasi
@@ -257,7 +257,7 @@ function renderDetail(d, reload) {
     printBtn());
   return h('div', { class: 'stack' },
     h('div', { class: 'row between wrap noprint' }, h('a', { class: 'btn ghost sm', href: '#/' + back }, ic('back'), 'Kembali')),
-    h('div', { class: 'printonly' }, h('b', {}, 'ALUNA - Laporan ' + L.ref), h('div', {}, 'Dicetak ' + dt(new Date().toISOString()) + ' oleh ' + me.nama + (L.sensitif ? ' - RAHASIA' : ''))),
+    h('div', { class: 'printonly' }, h('b', {}, 'VoiceUp - Laporan ' + L.ref), h('div', {}, 'Dicetak ' + dt(new Date().toISOString()) + ' oleh ' + me.nama + (L.sensitif ? ' - RAHASIA' : ''))),
     h('div', { class: 'card stack' }, h('div', { class: 'row wrap' }, h('h2', {}, L.judul)),
       h('div', { class: 'row wrap' }, h('span', { class: 'badge ' + L.status }, L.status), h('span', { class: 'tag' }, L.jenis + ' - ' + L.kategori), L.sensitif ? h('span', { class: 'tag sens' }, 'Sensitif') : null, L.urgensi === 'Mendesak' ? h('span', { class: 'tag urg' }, 'Mendesak') : null, L.terlambat ? h('span', { class: 'tag late' }, 'Melewati SLA') : null),
       h('div', { class: 'muted' }, L.ref + ' - Diterima ' + dt(L.waktu) + ' - Target SLA ' + dd(L.slaDue) + (L.lokasi ? ' - Lokasi: ' + L.lokasi : '')),
@@ -336,9 +336,9 @@ function pPengaturan(v) {
   load(box, () => api('settingsGet'), s => h('div', { class: 'stack' },
     h('div', { class: 'card stack' }, h('h3', {}, 'Pengaturan aplikasi'), h('button', { class: 'btn teal', onclick: () => formModal({ title: 'Pengaturan aplikasi', fields: [{ k: 'namaSekolah', label: 'Nama sekolah', req: 1, v: s.namaSekolah }, { k: 'emailEskalasi', label: 'Email penerima eskalasi SLA (opsional)', type: 'email', v: s.emailEskalasi }, { k: 'lokasi', label: 'Daftar lokasi kejadian (satu per baris)', type: 'textarea', rows: 8, v: s.lokasi.join('\n') }], submit: x => api('settingsSave', { namaSekolah: x.namaSekolah, emailEskalasi: x.emailEskalasi, lokasi: x.lokasi.split('\n') }), after: () => route() }) }, 'Ubah pengaturan'),
       h('div', { class: 'muted' }, s.namaSekolah + ' - Email eskalasi: ' + (s.emailEskalasi || 'belum diisi')), h('div', { class: 'muted' }, 'Lokasi: ' + s.lokasi.join(', '))),
-    h('div', { class: 'card stack' }, h('h3', {}, 'Pencadangan dan ekspor'), h('p', { class: 'muted' }, 'Cadangan disimpan sebagai salinan spreadsheet di folder "ALUNA Backup" pada Google Drive pemilik. Ekspor berisi seluruh laporan termasuk yang sensitif: simpan dengan aman.'),
+    h('div', { class: 'card stack' }, h('h3', {}, 'Pencadangan dan ekspor'), h('p', { class: 'muted' }, 'Cadangan disimpan sebagai salinan spreadsheet di folder "VoiceUp Backup" pada Google Drive pemilik. Ekspor berisi seluruh laporan termasuk yang sensitif: simpan dengan aman.'),
       h('div', { class: 'row wrap' }, h('button', { class: 'btn teal', onclick: () => api('backup').then(r => notice(true, 'Cadangan dibuat', r.nama + ' tersimpan di Google Drive.')).catch(e => notice(false, 'Gagal mencadangkan', e.message)) }, 'Buat cadangan sekarang'),
-        h('button', { class: 'btn ghost', onclick: () => api('exportData').then(r => { const a = h('a', { href: URL.createObjectURL(new Blob([csv(r.aspirasi, ['ref', 'waktu', 'jenis', 'kategori', 'lokasi', 'judul', 'uraian', 'status', 'urgensi', 'sensitif', 'slaDue', 'terlambat'])], { type: 'text/csv;charset=utf-8' })), download: 'aluna-ekspor-' + new Date().toISOString().slice(0, 10) + '.csv' }); document.body.append(a); a.click(); a.remove(); notice(true, 'Ekspor selesai', 'File CSV diunduh. Hapus dari perangkat bila sudah tidak diperlukan.'); }).catch(e => notice(false, 'Gagal mengekspor', e.message)) }, 'Ekspor data (CSV)'))),
+        h('button', { class: 'btn ghost', onclick: () => api('exportData').then(r => { const a = h('a', { href: URL.createObjectURL(new Blob([csv(r.aspirasi, ['ref', 'waktu', 'jenis', 'kategori', 'lokasi', 'judul', 'uraian', 'status', 'urgensi', 'sensitif', 'slaDue', 'terlambat'])], { type: 'text/csv;charset=utf-8' })), download: 'voiceup-ekspor-' + new Date().toISOString().slice(0, 10) + '.csv' }); document.body.append(a); a.click(); a.remove(); notice(true, 'Ekspor selesai', 'File CSV diunduh. Hapus dari perangkat bila sudah tidak diperlukan.'); }).catch(e => notice(false, 'Gagal mengekspor', e.message)) }, 'Ekspor data (CSV)'))),
     h('div', { class: 'card stack' }, h('h3', {}, 'Penyimpanan sementara'), h('p', { class: 'muted' }, 'Sesi login tersimpan hanya selama tab terbuka dan berakhir otomatis setelah 8 jam.'))));
 }
 function pAkun(v) {
