@@ -201,7 +201,7 @@ function pDash(v) {
   load(box, async () => {
     const d = await api('dashboard');   // satu panggilan: angka, grafik, daftar perhatian, lokasi
     if (d.perhatian) return { d: d, s: { mingguan: d.mingguan || {}, bulanan: {} }, i: { daftar: d.perhatian }, a: { perLokasi: d.lokasi || {} } };
-    const r = await Promise.all([api('stats', { ta: 'all' }).catch(() => null), api('inbox', {}).catch(() => ({ daftar: [] })), adm ? api('analisis').catch(() => null) : null]);   // cadangan bila backend belum diperbarui
+    const r = await Promise.all([api('stats', { ta: 'all' }).catch(() => null), api('inbox', {}).catch(() => ({ daftar: [] })), adm ? api('analysis').catch(() => null) : null]);   // cadangan bila backend belum diperbarui
     return { d: d, s: r[0], i: r[1], a: r[2] };
   }, x => {
     const d = x.d, FIN = ['Selesai', 'Ditutup'];
@@ -307,7 +307,7 @@ function pRespons(v) {
 }
 function pAnalisis(v) {
   const box = h('div'); v.append(h('div', { class: 'stack' }, head('Analisis Isu Sekolah', printBtn(true)), box));
-  load(box, () => api('analisis'), a => h('div', { class: 'stack' },
+  load(box, () => api('analysis'), a => h('div', { class: 'stack' },
     a.kategoriNaik.length ? h('div', { class: 'card stack' }, h('h3', {}, 'Kategori yang meningkat'), a.kategoriNaik.map(w => h('div', { class: 'warn' }, w.pesan))) : null,
     h('div', { class: 'grid', style: null }, bars('Laporan per kategori', a.perKategori), bars('Area sekolah yang sering jadi lokasi', a.perLokasi)),
     h('div', { class: 'grid' }, bars('Keluhan fasilitas per lokasi', a.lokasiFasilitas), bars('Persoalan yang belum selesai', a.belumSelesai)),
