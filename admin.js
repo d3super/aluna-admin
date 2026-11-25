@@ -70,12 +70,40 @@ async function load(box, fn, build) {
   box.replaceChildren(skel());
   try { box.replaceChildren(build(await fn())); } catch (e) { box.replaceChildren(h('div', { class: 'card empty' }, e.message, h('div', {}, h('button', { class: 'btn ghost sm', onclick: () => load(box, fn, build) }, 'Coba lagi')))); }
 }
+/* ---------- paginasi (maksimal 10 data per halaman) ---------- */
+const PER = 10;
+function pageNums(total, page) {
+  const a = [...new Set([1, total, page - 1, page, page + 1])].filter(n => n >= 1 && n <= total).sort((x, y) => x - y), out = [];
+  a.forEach((n, i) => { if (i && n - a[i - 1] > 1) out.push('...'); out.push(n); }); return out;
+}
+function pagerBar(total, page, go) {
+  const pages = Math.ceil(total / PER), from = (page - 1) * PER + 1, to = Math.min(page * PER, total);
+  return h('div', { class: 'pager noprint', role: 'navigation', 'aria-label': 'Paginasi' }, h('small', { class: 'muted' }, 'Menampilkan ' + from + '-' + to + ' dari ' + total + ' data'),
+    h('div', { class: 'pgs' }, h('button', { class: 'pg wide', disabled: page <= 1, onclick: () => go(page - 1) }, 'Sebelumnya'),
+      pageNums(pages, page).map(n => n === '...' ? h('span', { class: 'muted' }, '...') : h('button', { class: 'pg', 'aria-label': 'Halaman ' + n, 'aria-current': n === page ? 'page' : null, onclick: () => go(n) }, n)),
+      h('button', { class: 'pg wide', disabled: page >= pages, onclick: () => go(page + 1) }, 'Berikutnya')));
+}
 function tbl(cols, rows, onRow) {
   if (!rows.length) return h('div', { class: 'card empty' }, 'Belum ada data.');
-  return h('div', { class: 'tblw' }, h('table', {}, h('thead', {}, h('tr', {}, cols.map(c => h('th', {}, c.t)))),
-    h('tbody', {}, rows.map(r => h('tr', onRow ? { class: 'click', tabindex: 0, onclick: () => onRow(r), onkeydown: e => { if (e.key === 'Enter') onRow(r); } } : {}, cols.map(c => h('td', {}, c.f(r))))))));
+  const mk = list => h('div', { class: 'tblw' }, h('table', {}, h('thead', {}, h('tr', {}, cols.map(c => h('th', {}, c.t)))),
+    h('tbody', {}, list.map(r => h('tr', onRow ? { class: 'click', tabindex: 0, onclick: () => onRow(r), onkeydown: e => { if (e.key === 'Enter') onRow(r); } } : {}, cols.map(c => h('td', {}, c.f(r))))))));
+  if (rows.length <= PER) return mk(rows);
+  const wrap = h('div', { class: 'stack pgw' }), full = mk(rows); full.classList.add('printonly');   // saat dicetak: seluruh data, bukan satu halaman
+  let page = 1;
+  const draw = user => { const t = mk(rows.slice((page - 1) * PER, page * PER)); t.classList.add('noprint'); wrap.replaceChildren(t, full, pagerBar(rows.length, page, p => { page = p; draw(true); })); if (user) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  draw(false); return wrap;
 }
-const bars = (t, o) => { const ks = Object.keys(o).sort((a, b) => o[b] - o[a]), mx = o[ks[0]] || 1; return h('div', { class: 'card stack' }, h('h3', {}, t), ks.length ? ks.map(k => { const i = h('i'); i.style.width = Math.max(4, o[k] * 100 / mx) + '%'; return h('div', { class: 'bar' }, h('div', { class: 'lab' }, h('span', {}, k), h('b', {}, o[k])), h('div', { class: 'tr' }, i)); }) : h('p', { class: 'muted' }, 'Belum ada data.')); };
+function pagedList(items, render) {
+  if (items.length <= PER) return h('div', { class: 'stack' }, items.map(render));
+  const wrap = h('div', { class: 'stack pgw' }); let page = 1;
+  const draw = user => { wrap.replaceChildren(h('div', { class: 'stack' }, items.slice((page - 1) * PER, page * PER).map(render)), pagerBar(items.length, page, p => { page = p; draw(true); })); if (user) wrap.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  draw(false); return wrap;
+}
+const bars = (t, o) => {
+  const ks = Object.keys(o).sort((a, b) => o[b] - o[a]), mx = o[ks[0]] || 1, card = h('div', { class: 'card stack' }); let page = 1;
+  const draw = () => card.replaceChildren(h('h3', {}, t), ks.length ? ks.slice((page - 1) * PER, page * PER).map(k => { const i = h('i'); i.style.width = Math.max(4, o[k] * 100 / mx) + '%'; return h('div', { class: 'bar' }, h('div', { class: 'lab' }, h('span', {}, k), h('b', {}, o[k])), h('div', { class: 'tr' }, i)); }) : h('p', { class: 'muted' }, 'Belum ada data.'), ks.length > PER ? pagerBar(ks.length, page, p => { page = p; draw(); }) : null);
+  draw(); return card;
+};
 const head = (t, ...r) => r.filter(Boolean).length ? h('div', { class: 'actions' }, r) : null;
 const printBtn = big => h('button', { class: 'btn teal noprint' + (big ? '' : ' sm'), onclick: () => window.print() }, ic('print'), big ? 'Cetak laporan' : 'Cetak / simpan PDF');
 
@@ -325,10 +353,10 @@ function pAudit(v) {
 }
 function pNotif(v) {
   const box = h('div'); v.append(h('div', { class: 'stack' }, head('Notifikasi'), box));
-  load(box, () => api('notifications'), r => !r.daftar.length ? h('div', { class: 'card empty' }, 'Belum ada notifikasi.') : h('div', { class: 'stack' }, r.daftar.map(n => h('div', { class: 'card row between wrap', style: null },
+  load(box, () => api('notifications'), r => !r.daftar.length ? h('div', { class: 'card empty' }, 'Belum ada notifikasi.') : pagedList(r.daftar, n => h('div', { class: 'card row between wrap', style: null },
     h('div', {}, h('b', {}, n.pesan), h('div', { class: 'muted' }, dt(n.waktu) + (n.dibaca === 'TRUE' ? '' : ' - baru'))),
     h('div', { class: 'row' }, n.ref ? h('button', { class: 'btn teal sm', onclick: () => api('readNotif', { id: n.id }).then(() => { location.hash = '#/detail/' + encodeURIComponent(n.ref); pollNotif(); }).catch(() => { location.hash = '#/detail/' + encodeURIComponent(n.ref); }) }, 'Buka laporan') : null,
-      n.dibaca !== 'TRUE' ? h('button', { class: 'btn ghost sm', onclick: () => api('readNotif', { id: n.id }).then(() => { pollNotif(); route(); }) }, 'Tandai dibaca') : null)))));
+      n.dibaca !== 'TRUE' ? h('button', { class: 'btn ghost sm', onclick: () => api('readNotif', { id: n.id }).then(() => { pollNotif(); route(); }) }, 'Tandai dibaca') : null))));
 }
 function csv(rows, cols) { const q = x => '"' + String(x == null ? '' : x).replace(/"/g, '""') + '"'; return '\ufeff' + [cols.join(',')].concat(rows.map(r => cols.map(c => q(r[c])).join(','))).join('\r\n'); }
 function pPengaturan(v) {

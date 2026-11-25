@@ -109,10 +109,18 @@ tr.click{cursor:pointer}tr.click:hover td{background:var(--soft)}
 .modal.ok h3{color:var(--ok)}.modal.bad h3{color:var(--bad)}.macts{display:flex;gap:10px;flex-wrap:wrap}.macts .btn{flex:1;min-width:110px}
 .code{font:700 18px ui-monospace,Menlo,monospace;padding:12px;border-radius:14px;background:var(--soft);text-align:center;user-select:all}
 .printonly{display:none}
+.pgw{scroll-margin-top:110px}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:2px 4px}
+.pgs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pg{min-width:38px;height:38px;border-radius:50%;border:0;background:var(--card);color:var(--ink);box-shadow:var(--shadow);font-weight:700;cursor:pointer;padding:0}
+.pg.wide{border-radius:999px;padding:0 16px}
+.pg[aria-current=page]{background:var(--teal);color:#fff;box-shadow:0 8px 16px -8px rgba(45,166,154,.9)}
+.pg[disabled]{opacity:.4;cursor:default}
+.card .pager{padding:6px 0 0}
 @media(max-width:1180px){.dash{grid-template-columns:1fr}}
 @media(max-width:900px){.shell{display:block;padding:0}
 .side{position:fixed;z-index:50;left:0;top:0;height:100%;width:280px;border-radius:0 28px 28px 0;transform:translateX(-105%);transition:transform .2s}.side.open{transform:none}
 .main{padding:14px}.menu-btn{display:grid}.search{display:none}.user div:last-child{display:none}.hdr{margin:0 -14px;padding:12px 14px 20px}h1{font-size:22px}.kgrid{grid-template-columns:1fr 1fr;gap:12px}.kpi .kv{font-size:24px}}
-@media(max-width:520px){.kgrid{grid-template-columns:1fr}}
+@media(max-width:520px){.kgrid{grid-template-columns:1fr}.pager{justify-content:center}.pg.wide{padding:0 12px}}
 @media print{body{background:#fff;color:#000}.side,.hdr,.noprint,.btn,.cbtn{display:none!important}.shell{display:block;padding:0}.main{padding:0}.card,.tblw,.kpi{box-shadow:none;border:1px solid #bbb;background:#fff}.printonly{display:block;margin-bottom:12px}:root,[data-theme=dark]{--ink:#000;--muted:#444;--soft:#eee;--card:#fff}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
