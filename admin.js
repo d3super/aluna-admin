@@ -101,7 +101,10 @@ function pagedList(items, render) {
 }
 const bars = (t, o) => {
   const ks = Object.keys(o).sort((a, b) => o[b] - o[a]), mx = o[ks[0]] || 1, card = h('div', { class: 'card stack' }); let page = 1;
-  const draw = () => card.replaceChildren(h('h3', {}, t), ks.length ? ks.slice((page - 1) * PER, page * PER).map(k => { const i = h('i'); i.style.width = Math.max(4, o[k] * 100 / mx) + '%'; return h('div', { class: 'bar' }, h('div', { class: 'lab' }, h('span', {}, k), h('b', {}, o[k])), h('div', { class: 'tr' }, i)); }) : h('p', { class: 'muted' }, 'Belum ada data.'), ks.length > PER ? pagerBar(ks.length, page, p => { page = p; draw(); }) : null);
+  const draw = () => {
+    const items = ks.slice((page - 1) * PER, page * PER).map(k => { const i = h('i'); i.style.width = Math.max(4, o[k] * 100 / mx) + '%'; return h('div', { class: 'bar' }, h('div', { class: 'lab' }, h('span', {}, k), h('b', {}, o[k])), h('div', { class: 'tr' }, i)); });
+    card.replaceChildren(...[h('h3', {}, t), ...(items.length ? items : [h('p', { class: 'muted' }, 'Belum ada data.')]), ks.length > PER ? pagerBar(ks.length, page, p => { page = p; draw(); }) : null].filter(Boolean));   // replaceChildren tidak meratakan array/null
+  };
   draw(); return card;
 };
 const head = (t, ...r) => r.filter(Boolean).length ? h('div', { class: 'actions' }, r) : null;
@@ -157,7 +160,7 @@ function drawShell() {
   const hdr = h('header', { class: 'hdr noprint' }, h('button', { class: 'cbtn menu-btn', 'aria-label': 'Buka menu', onclick: () => side.classList.toggle('open') }, ic('menu')),
     h('div', { class: 'grow' }, h('h1', {}, title), h('p', { class: 'muted' }, sub)), h('label', { class: 'search' }, ic('search'), search),
     h('button', { class: 'cbtn', 'aria-label': dark ? 'Mode terang' : 'Mode gelap', onclick: theme }, ic(dark ? 'sun' : 'moon')),
-    h('a', { class: 'cbtn', href: '#/notif', 'aria-label': 'Notifikasi' + (st.notif ? ', ' + st.notif + ' baru' : '') }, ic('bell'), st.notif ? h('i', { class: 'dot-n' }) : null),
+    h('a', { class: 'cbtn', id: 'bell', href: '#/notif', 'aria-label': 'Notifikasi' + (st.notif ? ', ' + st.notif + ' baru' : '') }, ic('bell'), st.notif ? h('i', { class: 'dot-n' }) : null),
     h('div', { class: 'user' }, h('div', { class: 'avatar', 'aria-hidden': 'true' }, st.user.nama.split(/\s+/).slice(0, 2).map(x => x[0]).join('').toUpperCase()), h('div', {}, h('b', {}, st.user.nama), h('small', {}, ROLE_NAME[role].split(' ').slice(0, 2).join(' ')))));
   $('#app').replaceChildren(h('div', { class: 'shell' }, side, h('div', { class: 'main' }, hdr, h('main', { class: 'content', id: 'view', tabindex: -1 }))));
 }
@@ -169,7 +172,13 @@ function route() {
   if (!$('#view')) drawShell(); else drawShell();
   const v = $('#view'); (PAGES[id] || pDash)(v, decodeURIComponent(parts[1] || '')); window.scrollTo(0, 0);
 }
-async function pollNotif() { try { const r = await api('notifications'); if (r.belumDibaca !== st.notif) { st.notif = r.belumDibaca; const s = $('#side'); if (s) { const keep = s.classList.contains('open'); drawShell(); if (keep) $('#side').classList.add('open'); } } } catch (e) {} }
+function updateBell() {   // perbarui titik notifikasi saja; JANGAN menggambar ulang kerangka agar halaman yang sedang dibuka tidak terhapus
+  const b = $('#bell'); if (!b) return;
+  const d = b.querySelector('.dot-n');
+  if (st.notif && !d) b.append(h('i', { class: 'dot-n' })); else if (!st.notif && d) d.remove();
+  b.setAttribute('aria-label', 'Notifikasi' + (st.notif ? ', ' + st.notif + ' baru' : ''));
+}
+async function pollNotif() { try { const r = await api('notifications'); if (r.belumDibaca !== st.notif) { st.notif = r.belumDibaca; updateBell(); } } catch (e) {} }
 async function start(fromLogin) {
   if (!fromLogin) { try { const me = await api('me'); st.user = me.user; } catch (e) { return showLogin(); } }
   st.metaP = api('meta').then(m => { st.meta = m; }).catch(() => {});   // berjalan paralel, tidak menahan tampilan
